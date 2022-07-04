@@ -44,38 +44,6 @@ def count_ocurrences(data):
     return symbols
 
 
-def build_min_heap(A):
-    n = int((len(A)//2)-1)
-    for k in range(n, -1, -1):
-        min_heapify(A, k)
-
-
-def heapify(arr, n, i):
-    largest = i
-    l = 2 * i + 1
-    r = 2 * i + 2
-
-    if l < n and arr[i] < arr[l]:
-        largest = l
-
-    if r < n and arr[largest] < arr[r]:
-        largest = r
-
-    if largest != i:
-        arr[i], arr[largest] = arr[largest], arr[i]  # zamiana
-
-        heapify(arr, n, largest)
-
-
-def Output_Encoded(data, coding):
-    encoding_output = []
-    for c in data:
-        encoding_output.append(coding[c])
-
-    string = ''.join([str(item) for item in encoding_output])
-    return string
-
-
 def min_heapify(A, k):
     l = left(k)
     r = right(k)
@@ -88,6 +56,24 @@ def min_heapify(A, k):
     if smallest != k:
         A[k], A[smallest] = A[smallest], A[k]
         min_heapify(A, smallest)
+
+
+def build_min_heap(A):
+    n = int((len(A)//2)-1)
+    for k in range(n, -1, -1):
+        min_heapify(A, k)
+
+
+def Output_Encoded(data, coding):
+    encoding_output = []
+    for c in data:
+        encoding_output.append(coding[c])
+
+    string = ''.join([str(item) for item in encoding_output])
+    return string
+
+
+
 
 
 def left(k):
