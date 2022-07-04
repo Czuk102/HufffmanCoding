@@ -1,42 +1,41 @@
 
 
+from collections import OrderedDict
 
 class Node:
-    def __init__(self, czestosc, symbol, lewy_dzieciak=None, prawy_dzieciak=None):
-        # probability of symbol
-        self.czestosc = czestosc
+    def __init__(self, frequency, symbol, left_kid=None, right_kid=None):
+
+        self.frequency = frequency
 
         self.symbol = symbol
 
-        self.lewy_dzieciak = lewy_dzieciak
+        self.left_kid = left_kid
 
-        self.prawy_dzieciak = prawy_dzieciak
+        self.right_kid = right_kid
 
         #  (0/1)
-        self.kod = ''
-
+        self.code = ''
 
 
 codes = {}
 
-
 def Calculate_Codes(node, val=''):
     # huffman code for current node
-    newVal = val + str(node.kod)
+    newVal = val + str(node.code)
 
-    if (node.lewy_dzieciak):
-        Calculate_Codes(node.lewy_dzieciak, newVal)
-    if (node.prawy_dzieciak):
-        Calculate_Codes(node.prawy_dzieciak, newVal)
+    if (node.left_kid):
+        Calculate_Codes(node.left_kid, newVal)
+    if (node.right_kid):
+        Calculate_Codes(node.right_kid, newVal)
 
-    if (not node.lewy_dzieciak and not node.prawy_dzieciak):
+    if (not node.left_kid and not node.right_kid):
         codes[node.symbol] = newVal
 
     return codes
 
 
-def stworz_slownik(data):
-    symbols = dict()
+def count_ocurrences(data):
+    symbols = OrderedDict()
     for element in data:
         if element in symbols:
             symbols[element] += 1
@@ -45,11 +44,16 @@ def stworz_slownik(data):
     return symbols
 
 
+def build_min_heap(A):
+    n = int((len(A)//2)-1)
+    for k in range(n, -1, -1):
+        min_heapify(A, k)
+
+
 def heapify(arr, n, i):
     largest = i
-    l = 2 * i + 1  # left = 2*i + 1
-    r = 2 * i + 2  # right = 2*i + 2
-
+    l = 2 * i + 1
+    r = 2 * i + 2
 
     if l < n and arr[i] < arr[l]:
         largest = l
@@ -57,12 +61,10 @@ def heapify(arr, n, i):
     if r < n and arr[largest] < arr[r]:
         largest = r
 
-
     if largest != i:
-        arr[i], arr[largest] = arr[largest], arr[i]  # swap
+        arr[i], arr[largest] = arr[largest], arr[i]  # zamiana
 
         heapify(arr, n, largest)
-
 
 
 def Output_Encoded(data, coding):
@@ -74,51 +76,56 @@ def Output_Encoded(data, coding):
     return string
 
 
-def Huffman_Encoding(data):
-    slownik = stworz_slownik(data)
-    litery = slownik.keys()
+def min_heapify(A, k):
+    l = left(k)
+    r = right(k)
+    if l < len(A) and A[l].frequency < A[k].frequency:
+        smallest = l
+    else:
+        smallest = k
+    if r < len(A) and A[r].frequency < A[smallest].frequency:
+        smallest = r
+    if smallest != k:
+        A[k], A[smallest] = A[smallest], A[k]
+        min_heapify(A, smallest)
 
-    wezly = []
+
+def left(k):
+    return 2 * k + 1
+
+
+def right(k):
+    return 2 * k + 2
+
+
+def Huffman_Encoding(data):
+    occurrences = count_ocurrences(data)
+    nodes = []
 
     # tworzy drzewo huffmana
-    for symbol in slownik:
-        wezly.append(Node(slownik.get(symbol), symbol))
+    for symbol in occurrences:
+        nodes.append(Node(occurrences.get(symbol), symbol))
 
-    i = len(wezly)+1
-    while len(wezly) > 1:
+    while len(nodes) > 1:
 
-        # heapify(wezly, len(wezly), i)
-        wezly = sorted(wezly, key=lambda x: x.czestosc)
-        # for node in nodes:
-        #      print(node.symbol, node.prob)
+        build_min_heap(nodes)
 
-        lewy = wezly[0]
-        prawy = wezly[1]
+        left = nodes[0]
+        nodes.pop(0)
 
-        lewy.kod = 1
-        prawy.kod = 0
+        right = nodes[0]
+        nodes.pop(0)
+
+        left.code = 0
+        right.code = 1
 
         # tworzy nowy wezel z dwóch najmniejszych
-        nowyWezel = Node(lewy.czestosc + prawy.czestosc, lewy.symbol + prawy.symbol, lewy, prawy)
+        newNode = Node(left.frequency + right.frequency, left.symbol + right.symbol, left, right)
+        nodes.append(newNode)
 
-        #heappop()
-        wezly.remove(lewy)
-        # i = i - 1
-
-        wezly.remove(prawy)
-
-        #heappush()
-        wezly.append(nowyWezel)
-
-    huffman_encoding = Calculate_Codes(wezly[0])
+    huffman_encoding = Calculate_Codes(nodes[0])
     return huffman_encoding
 
-    # encoded_output = Output_Encoded(data, huffman_encoding)
-    # return encoded_output
-
-
-def encode_input(data, coding):
-    return Output_Encoded(data,coding)
 
 def binaryToDecimal(n):
     num = n
@@ -134,7 +141,6 @@ def binaryToDecimal(n):
         if (num[i] == '1'):
             dec_value += base
         base = base * 2
-
 
     return dec_value
 
@@ -157,28 +163,30 @@ def setStringtoASCII(string):
 
     return res
 
-
+# odczyt inputu
 input_file = open("input.txt", "r", encoding="utf8")
 text = input_file.read()
 input_file.close()
 
 data = text
-slownik = Huffman_Encoding(data)
+print(count_ocurrences(text))
+
+#tworzenie kodowania
+dictionary = Huffman_Encoding(data)
 output_file = open("output.txt", "w", encoding="utf8")
-output_file.write(str(slownik))
+output_file.write(str(dictionary))
 output_file.write("\n")
 output_file.close()
+
 output_file = open("output.txt", "a", encoding="utf8")
-zakodowany_string = encode_input(data, slownik)
-binary_str = zakodowany_string
+coded_string = Output_Encoded(data, dictionary)
+binary_str = coded_string
 
 # dopełnienie zerami do 8bitow
-reszta = len(binary_str ) % 8
-newstr = binary_str.ljust(len(binary_str) + 8 - reszta, "0")
-
-
-a = setStringtoASCII(newstr)
-output_file.write(a)
+reminder = len(binary_str ) % 8
+newstr = binary_str.ljust(len(binary_str) + 8 - reminder, "0")
+final_output = setStringtoASCII(newstr)
+output_file.write(final_output)
 
 output_file.close()
 
